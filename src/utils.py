@@ -89,21 +89,24 @@ def to_cuda(*args):
     """
     Move tensors to CUDA.
     """
-    return [None if x is None else x.cuda() for x in args]
+    if torch.cuda.is_available():
+        return [None if x is None else x.cuda() for x in args]
+    else:
+        return [None if x is None else x for x in args]
 
 
 def load_w2v(data_path, dim_embedding):
-    # glove = GloVe(dim=dim_embedding)
+    # glove = GloVe(name='6B', dim=dim_embedding)
     glove = Vectors(data_path, ".")
     vocab_size = len(glove.stoi)
     word2idx = glove.stoi
     weight = deepcopy(glove.vectors)
-    weight = torch.cat((weight, weight.new(1, dim_embedding).fill_(0.0)), dim=0)
-    word2idx['UNK'] = vocab_size
+    weight = torch.cat((weight, weight.new(1, dim_embedding).fill_(0.0)), dim=0)    # 添加UNK的embedding
+    word2idx['UNK'] = vocab_size    # UNK加入词典中
     return word2idx, weight
 
 
 if __name__ == "__main__":
-    word2idx, weight = load_w2v('data/glove.6B.300d.txt', 300)
+    word2idx, weight = load_w2v('/Users/himon/resource/glove.6B.50d.txt', 50)
     print(weight.size())
     print(weight[len(word2idx)-1].tolist())
